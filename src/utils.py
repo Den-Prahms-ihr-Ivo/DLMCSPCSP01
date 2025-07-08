@@ -21,8 +21,8 @@ class Graph(TypedDict):
     nodes: List[Node]
     edges: List[Edge]
     # GGF: used to check which graph is the most optimal
-    outgoing_payments: int
-    ingoing_payments: int
+    # outgoing_payments: Optional[int]
+    # ingoing_payments: Optional[int]
 
 
 def reduce_net_balance(graph: Graph) -> Graph:

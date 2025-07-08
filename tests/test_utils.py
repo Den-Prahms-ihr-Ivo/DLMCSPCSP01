@@ -24,13 +24,27 @@ class TestUtils:
         "graph, expected",
         [
             (TEST_GRAPHS["0_sum"], EXPECTED_EDGES["0_sum"]),
+            (TEST_GRAPHS["4_trans_to_3"], EXPECTED_EDGES["4_trans_to_3"]),
         ],
     )
     def test_pair_largest_difference_first(self, graph, expected):
         tmp = utils.pair_largest_difference_first(graph)
 
+        found_edges = 0
         for e in tmp["edges"]:
-            print(e)
-            assert e["origin"]["id"] == expected["origin"]["id"]
-            assert e["destination"]["id"] == expected["destination"]["id"]
-            assert e["weight"] == expected["weight"]
+            edge = next(
+                (
+                    expected_e
+                    for expected_e in expected
+                    if expected_e["origin"]["id"] == e["origin"]["id"]
+                    and expected_e["destination"]["id"] == e["destination"]["id"]
+                ),
+                None,
+            )
+            if edge:
+                assert e["weight"] == edge["weight"]
+                found_edges += 1
+            else:
+                assert False
+
+        assert found_edges == len(tmp["edges"])
