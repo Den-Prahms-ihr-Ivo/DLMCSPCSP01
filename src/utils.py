@@ -73,10 +73,13 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
         b = balances[-1]["current_net_balance"]
 
         # First check if balance is 0, then remove entry from list
+        print("..")
+        print(balances)
         if a == 0:
             balances = balances[1:]
             continue
 
+        print("_________________________")
         # Now match first and last entry
 
         if a == abs(b):
@@ -116,7 +119,7 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
             )
         else:  # a > abs(b)
             # Since |a| > |b|, A has to pay back more than B has lent.
-            new_transactions.append({"origin": A, "destination": B, "weight": b})
+            new_transactions.append({"origin": A, "destination": B, "weight": abs(b)})
 
             # now B has a balance of 0 and disapears therefore from the balance list.
             balances = balances[:-1]
@@ -134,6 +137,8 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
             )
 
     tmp["edges"] = new_transactions
+    print("IVOOoooo")
+    print(new_transactions)
 
     return tmp
 

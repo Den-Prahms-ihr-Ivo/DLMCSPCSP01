@@ -21,30 +21,41 @@ class TestUtils:
             assert node["initial_net_balance"] == expected[i]
 
     @pytest.mark.parametrize(
-        "graph, expected",
+        ("graph", "expected", "is_expected_to_fail"),
         [
-            (TEST_GRAPHS["0_sum"], EXPECTED_EDGES["0_sum"]),
-            (TEST_GRAPHS["4_trans_to_3"], EXPECTED_EDGES["4_trans_to_3"]),
+            (TEST_GRAPHS["0_sum"], EXPECTED_EDGES["0_sum"], False),
+            (TEST_GRAPHS["4_trans_to_3"], EXPECTED_EDGES["4_trans_to_3"], False),
+            (
+                TEST_GRAPHS["counter_example_longest"],
+                EXPECTED_EDGES["counter_example_longest"],
+                True,
+            ),
         ],
+        ids=["balances equal to 0", "4->3", "Counter Example"],
     )
-    def test_pair_largest_difference_first(self, graph, expected):
-        tmp = utils.pair_largest_difference_first(graph)
+    def test_pair_largest_difference_first(self, graph, expected, is_expected_to_fail):
+        # The function expects a graph that has already been reduced
+        tmp = utils.pair_largest_difference_first(utils.reduce_net_balance(graph))
+
+        # print(tmp)
 
         found_edges = 0
-        for e in tmp["edges"]:
+        for expected_e in expected:
             edge = next(
                 (
-                    expected_e
-                    for expected_e in expected
-                    if expected_e["origin"]["id"] == e["origin"]["id"]
-                    and expected_e["destination"]["id"] == e["destination"]["id"]
+                    e
+                    for e in tmp["edges"]
+                    if e["origin"]["id"] == expected_e["origin"]["id"]
+                    and e["destination"]["id"] == expected_e["destination"]["id"]
                 ),
                 None,
             )
             if edge:
-                assert e["weight"] == edge["weight"]
+                if not is_expected_to_fail:
+                    assert edge["weight"] == expected_e["weight"]
                 found_edges += 1
             else:
-                assert False
+                assert is_expected_to_fail
 
-        assert found_edges == len(tmp["edges"])
+        if not is_expected_to_fail:
+            assert found_edges == len(tmp["edges"])
