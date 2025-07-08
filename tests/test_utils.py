@@ -30,6 +30,7 @@ class TestUtils:
         tmp = utils.pair_largest_difference_first(graph)
 
         for e in tmp["edges"]:
+            print(e)
             assert e["origin"]["id"] == expected["origin"]["id"]
             assert e["destination"]["id"] == expected["destination"]["id"]
             assert e["weight"] == expected["weight"]

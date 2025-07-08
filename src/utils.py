@@ -73,7 +73,7 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
         b = balances[-1]["current_net_balance"]
 
         # First check if balance is 0, then remove entry from list
-        if A == 0:
+        if a == 0:
             balances = balances[1:]
             continue
 
@@ -133,9 +133,7 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
                 tmp["nodes"], key=lambda d: d["current_net_balance"], reverse=True
             )
 
-        # remove smaller one from list
-
-        pass
+    tmp["edges"] = new_transactions
 
     return tmp
 
