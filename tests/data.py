@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from src.utils import Edge, Node, Graph
+from src.graph_utils import Edge, Node, Graph
 
 A: Node = {"id": 1, "name": "A", "initial_net_balance": 0, "current_net_balance": 0}
 B: Node = {"id": 2, "name": "B", "initial_net_balance": 0, "current_net_balance": 0}
@@ -66,7 +66,13 @@ TEST_GRAPHS: Dict[str, Graph] = {
     "counter_example_opposite": {  # TODO: implement. Aber jetzt ist leider Abendentspannung angesagt :(
         "name": "Counterexample for Closest Opposite Matching",
         "nodes": [A, B, C, D, E, F],
-        "edges": [],
+        "edges": [
+            {"origin": D, "destination": A, "weight": 4},
+            {"origin": E, "destination": A, "weight": 5},
+            #
+            {"origin": F, "destination": B, "weight": 8},
+            {"origin": F, "destination": C, "weight": 2},
+        ],
     },
 }
 
@@ -81,5 +87,12 @@ EXPECTED_EDGES: Dict[str, List[Edge]] = {
         {"origin": B, "destination": A, "weight": 8},
         {"origin": A, "destination": C, "weight": 3},
         {"origin": A, "destination": D, "weight": 6},
+    ],
+    "counter_example_opposite": [
+        {"origin": A, "destination": D, "weight": 4},
+        {"origin": A, "destination": E, "weight": 5},
+        #
+        {"origin": B, "destination": F, "weight": 8},
+        {"origin": C, "destination": F, "weight": 2},
     ],
 }

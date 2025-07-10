@@ -73,15 +73,11 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
         b = balances[-1]["current_net_balance"]
 
         # First check if balance is 0, then remove entry from list
-        print("..")
-        print(balances)
         if a == 0:
             balances = balances[1:]
             continue
 
-        print("_________________________")
         # Now match first and last entry
-
         if a == abs(b):
             # A and B are a perfect match and cancel each other out.
             # Since A > B due to sorting, A hast to pay the amount to B to settle the debt.
@@ -137,8 +133,29 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
             )
 
     tmp["edges"] = new_transactions
-    print("IVOOoooo")
-    print(new_transactions)
+
+    return tmp
+
+
+def pair_matching_differences_first(graph: Graph) -> Graph:
+    """
+    First sorts all balances then matches differences.
+    Returns a copy with all transactions minimized starting with the best matching differnces
+    """
+    tmp = copy.deepcopy(graph)
+
+    # Largest balance is now at position [0] and the lowest at [-1]
+    balances: List[Node] = sorted(
+        tmp["nodes"], key=lambda d: d["initial_net_balance"], reverse=True
+    )
+
+    new_transactions: List[Edge] = []
+
+    # ############################
+    # TODO: IMPLEMENT
+    # ############################
+
+    tmp["edges"] = new_transactions
 
     return tmp
 
