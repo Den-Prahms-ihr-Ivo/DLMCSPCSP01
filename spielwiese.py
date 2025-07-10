@@ -1,19 +1,20 @@
+import pandas as pd
+
 from src import graph_utils
 from tests.data import TEST_GRAPHS, EXPECTED_EDGES
 
-if __name__ == "__main__":
-    graph_utils.compare_graphs(
-        graph_utils.pair_matching_differences_first_LEFT(
-            graph_utils.reduce_net_balance(TEST_GRAPHS["counter_example_longest"])
-        ),
-        EXPECTED_EDGES["counter_example_longest"],
-    )
 
-    # print("\n")
-    # graph_utils.print_graph(
-    #     graph_utils.pair_matching_differences_first_LEFT(
-    #         graph_utils.reduce_net_balance(
-    #             TEST_GRAPHS["counter_example_opposite_reverse"]
-    #         )
-    #     )
-    # )
+if __name__ == "__main__":
+    graph = TEST_GRAPHS["has_no_cycle"]
+
+    print(graph)
+
+    money_given = sum(
+        [e["weight"] for e in graph["edges"] if e["destination"]["name"] == "C"]
+    )
+    print(money_given)
+
+    tmp = graph_utils.reduce_net_balance(graph)
+    # print([t[""] for t in tmp["nodes"]])
+    for i, node in enumerate(list(tmp["nodes"].values())):
+        print(node["initial_net_balance"])

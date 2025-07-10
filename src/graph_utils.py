@@ -34,6 +34,7 @@ def reduce_net_balance(graph: Graph) -> Graph:
     tmp = copy.deepcopy(graph)
 
     for key, node in tmp["nodes"].items():
+
         # outgoing edges
         money_given = sum(
             [e["weight"] for e in tmp["edges"] if e["origin"]["name"] == key]
@@ -285,53 +286,53 @@ def simplify_transactions(graph: Graph) -> Graph:
     return tmp
 
 
-"""
-class Node(TypedDict):
-    id: int
-    name: str
-    initial_net_balance: int
-    current_net_balance: int
+def df_to_graph(df: pd.DataFrame, name="Nina") -> Graph:
+    nodes: Dict[str, Node] = {}
+    edges: List[Edge] = []
+
+    # Im Nachhinein wäre es sooooooooo viel cleverer gewesen alle Nodes als Dict aufzubauen, aber
+    # Jetzt hab ich dazu keinen Bock mehr :(
+
+    node_names = pd.unique(df[["Giver", "Receiver"]].values.ravel("K"))
+
+    for n in node_names:
+        nodes[n] = {"name": n, "initial_net_balance": 0, "current_net_balance": 0}
+
+    for _, row in df.iterrows():
+        edges.append(
+            {
+                "origin": nodes[row["Giver"]],
+                "destination": nodes[row["Receiver"]],
+                "weight": row["Amount"],
+            }
+        )
+
+    return {"name": name, "edges": edges, "nodes": nodes}
 
 
-class Edge(TypedDict):
-    origin: Node
-    destination: Node
-    weight: int
-
-
-class Graph(TypedDict):
-    name: str
-    nodes: List[Node]
-    edges: List[Edge]
-"""
-
-# TODO: IVO
-# def df_to_graph(df: pd.DataFrame) -> Graph:
-#     nodes: Dict[str, Node] = []
-#     edges: List[Edge] = []
-
-#     # Im Nachhinein wäre es sooooooooo viel cleverer gewesen alle Nodes als Dict aufzubauen, aber
-#     # Jetzt hab ich dazu keinen Bock mehr :(
-
-#     node_names = pd.unique(df[["Giver", "Receiver"]].values.ravel("K"))
-
-#     for i, n in enumerate(node_names):
-#         nodes[n] = {"name": n, "initial_net_balance": 0, "current_net_balance": 0}
-
-#     for index, row in df.iterrows():
-#         print(row["c1"], row["c2"])
+def print_edge(edge: Edge) -> None:
+    print(
+        f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']} "
+    )
 
 
 def print_graph(graph: Graph) -> None:
+
     for edge in graph["edges"]:
-        print(
-            f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']} "
-        )
+        print_edge(edge)
 
 
 def compare_graphs(graph: Graph, edges: List[Edge]) -> None:
-    print("AAAAA")
     for i, edge in enumerate(graph["edges"]):
         print(
             f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']} \t |  {edges[i]['origin']['name']} ==> {edges[i]['destination']['name']} : {edges[i]['weight']}"
         )
+
+
+def process_CSV(path_to_csv: str) -> Graph:
+    df = pd.read_csv("./data/Test_Case_1.csv")
+
+    graph = df_to_graph(df, name=path_to_csv)
+    graph = reduce_net_balance(graph)
+
+    return pair_matching_differences_first_LEFT(graph)

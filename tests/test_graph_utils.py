@@ -7,7 +7,7 @@ import pytest
 
 
 from src import graph_utils
-from .data import TEST_GRAPHS, EXPECTED_EDGES
+from .data import TEST_GRAPHS, EXPECTED_EDGES, EXPECTED_CSV_EDGES
 
 
 class TestGraphUtils:
@@ -165,5 +165,38 @@ class TestGraphUtils:
         for i, e in enumerate(expected):
             assert e == result[i]
 
+    @pytest.mark.parametrize(
+        ("path_to_csv", "expected"),
+        [
+            ("./data/Test_Case_1", EXPECTED_CSV_EDGES["Test_Case_1"]),
+        ],
+        ids=[
+            "TEST CASE 1",
+        ],
+    )
+    def test_integration(self, path_to_csv, expected):
+        # The function expects a graph that has already been reduced
+        tmp = graph_utils.process_CSV(path_to_csv)
 
-# TODO: Find exact matches first as a boolean flag.
+        found_edges = 0
+        for expected_e in expected:
+            edge = next(
+                (
+                    e
+                    for e in tmp["edges"]
+                    if e["origin"]["name"] == expected_e["origin"]["name"]
+                    and e["destination"]["name"] == expected_e["destination"]["name"]
+                ),
+                None,
+            )
+            if edge:
+                assert edge["weight"] == expected_e["weight"]
+                found_edges += 1
+            else:
+                print("\n--------\n")
+                graph_utils.print_edge(expected_e)
+                print("\n\n")
+                graph_utils.print_graph(tmp)
+                assert False
+
+        assert found_edges == len(tmp["edges"])

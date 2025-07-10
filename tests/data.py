@@ -136,3 +136,13 @@ EXPECTED_EDGES: Dict[str, List[Edge]] = {
         {"origin": B, "destination": F, "weight": 4},
     ],
 }
+
+EXPECTED_CSV_EDGES: Dict[str, List[Edge]] = {
+    "Test_Case_1": [
+        {"origin": A, "destination": G, "weight": 9},
+        {"origin": D, "destination": H, "weight": 2},
+        {"origin": B, "destination": H, "weight": 8},
+        {"origin": C, "destination": E, "weight": 4},
+        {"origin": C, "destination": F, "weight": 4},
+    ],
+}
