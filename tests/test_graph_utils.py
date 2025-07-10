@@ -22,7 +22,7 @@ class TestGraphUtils:
     def test_reduce_net_balance(self, graph, expected):
         tmp = graph_utils.reduce_net_balance(graph)
 
-        for i, node in enumerate(tmp["nodes"]):
+        for i, node in enumerate(list(tmp["nodes"].values())):
             assert node["initial_net_balance"] == expected[i]
 
     @pytest.mark.parametrize(
@@ -68,8 +68,8 @@ class TestGraphUtils:
                 (
                     e
                     for e in tmp["edges"]
-                    if e["origin"]["id"] == expected_e["origin"]["id"]
-                    and e["destination"]["id"] == expected_e["destination"]["id"]
+                    if e["origin"]["name"] == expected_e["origin"]["name"]
+                    and e["destination"]["name"] == expected_e["destination"]["name"]
                 ),
                 None,
             )
@@ -103,6 +103,11 @@ class TestGraphUtils:
                 EXPECTED_EDGES["counter_example_opposite_reverse"],
                 False,
             ),
+            (
+                TEST_GRAPHS["problematic_matching"],
+                EXPECTED_EDGES["problematic_matching"],
+                False,
+            ),
         ],
         ids=[
             "MATCH - balances equal to 0",
@@ -110,6 +115,7 @@ class TestGraphUtils:
             "MATCH - Counter Example",
             "MATCH - Counter Example Opposite #2",
             "MATCH - REVERSE Counter Example Opposite #2",
+            "MATCH - Problematic Matching",
         ],
     )
     def test_pair_matching_differences_first_LEFT(
@@ -126,8 +132,8 @@ class TestGraphUtils:
                 (
                     e
                     for e in tmp["edges"]
-                    if e["origin"]["id"] == expected_e["origin"]["id"]
-                    and e["destination"]["id"] == expected_e["destination"]["id"]
+                    if e["origin"]["name"] == expected_e["origin"]["name"]
+                    and e["destination"]["name"] == expected_e["destination"]["name"]
                 ),
                 None,
             )

@@ -1,11 +1,11 @@
 import copy
 import operator
+import pandas as pd
 
 from typing import Dict, TypedDict, Optional, List, Tuple
 
 
 class Node(TypedDict):
-    id: int
     name: str
     initial_net_balance: int
     current_net_balance: int
@@ -19,7 +19,7 @@ class Edge(TypedDict):
 
 class Graph(TypedDict):
     name: str
-    nodes: List[Node]
+    nodes: Dict[str, Node]
     edges: List[Edge]
     # GGF: used to check which graph is the most optimal
     # outgoing_payments: Optional[int]
@@ -33,14 +33,14 @@ def reduce_net_balance(graph: Graph) -> Graph:
     """
     tmp = copy.deepcopy(graph)
 
-    for node in tmp["nodes"]:
+    for key, node in tmp["nodes"].items():
         # outgoing edges
         money_given = sum(
-            [e["weight"] for e in tmp["edges"] if e["origin"]["id"] == node["id"]]
+            [e["weight"] for e in tmp["edges"] if e["origin"]["name"] == key]
         )
         # incoming edges
         money_received = sum(
-            [e["weight"] for e in tmp["edges"] if e["destination"]["id"] == node["id"]]
+            [e["weight"] for e in tmp["edges"] if e["destination"]["name"] == key]
         )
 
         net_balance = money_received - money_given
@@ -64,7 +64,9 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
 
     # Largest balance is now at position [0] and the lowest at [-1]
     balances: List[Node] = sorted(
-        tmp["nodes"], key=lambda d: d["current_net_balance"], reverse=True
+        list(tmp["nodes"].values()),
+        key=lambda d: d["current_net_balance"],
+        reverse=True,
     )
 
     new_transactions: List[Edge] = []
@@ -89,12 +91,8 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
             # afterwards these nodes are removed from the list ...
             balances = balances[1:-1]
             # ...  and their corresponding net_balance are updated
-            item = next((n for n in tmp["nodes"] if n["id"] == A["id"]), None)
-            if item:
-                item["current_net_balance"] = 0
-            item = next((n for n in tmp["nodes"] if n["id"] == B["id"]), None)
-            if item:
-                item["current_net_balance"] = 0
+            tmp["nodes"][A["name"]]["current_net_balance"] = 0
+            tmp["nodes"][B["name"]]["current_net_balance"] = 0
 
             # In this case there is no need to resort the array
 
@@ -105,16 +103,14 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
             # now A has a balance of 0 and disapears therefore from the balance list.
             balances = balances[1:]
             # ...  and their corresponding net_balance are updated
-            item = next((n for n in tmp["nodes"] if n["id"] == A["id"]), None)
-            if item:
-                item["current_net_balance"] = 0
-            item = next((n for n in tmp["nodes"] if n["id"] == B["id"]), None)
-            if item:
-                item["current_net_balance"] = b + a
+            tmp["nodes"][A["name"]]["current_net_balance"] = 0
+            tmp["nodes"][B["name"]]["current_net_balance"] = b + a
 
             # resort
             balances = sorted(
-                tmp["nodes"], key=lambda d: d["current_net_balance"], reverse=True
+                list(tmp["nodes"].values()),
+                key=lambda d: d["current_net_balance"],
+                reverse=True,
             )
         else:  # a > abs(b)
             # Since |a| > |b|, A has to pay back more than B has lent.
@@ -123,16 +119,14 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
             # now B has a balance of 0 and disapears therefore from the balance list.
             balances = balances[:-1]
             # ...  and their corresponding net_balance are updated
-            item = next((n for n in tmp["nodes"] if n["id"] == A["id"]), None)
-            if item:
-                item["current_net_balance"] = b + a
-            item = next((n for n in tmp["nodes"] if n["id"] == B["id"]), None)
-            if item:
-                item["current_net_balance"] = 0
+            tmp["nodes"][A["name"]]["current_net_balance"] = b + a
+            tmp["nodes"][B["name"]]["current_net_balance"] = 0
 
             # resort
             balances = sorted(
-                tmp["nodes"], key=lambda d: d["current_net_balance"], reverse=True
+                list(tmp["nodes"].values()),
+                key=lambda d: d["current_net_balance"],
+                reverse=True,
             )
 
     tmp["edges"] += new_transactions
@@ -211,7 +205,9 @@ def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
     # First sorts all balances then matches differences.
     # Largest balance is now at position [0] and the lowest at [-1]
     balances: List[Node] = sorted(
-        tmp["nodes"], key=lambda d: d["initial_net_balance"], reverse=True
+        list(tmp["nodes"].values()),
+        key=lambda d: d["initial_net_balance"],
+        reverse=True,
     )
 
     new_transactions: List[Edge] = []
@@ -244,13 +240,15 @@ def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
                 )
 
             # update balances
-            balances[idx]["current_net_balance"] = abs(
+            tmp["nodes"][balances[idx]["name"]]["current_net_balance"] = abs(
                 balances[idx]["current_net_balance"]
             ) - abs(balances[c]["current_net_balance"])
-            balances[c]["current_net_balance"] = 0
+            tmp["nodes"][balances[c]["name"]]["current_net_balance"] = 0
 
         balances = sorted(
-            balances, key=lambda d: d["current_net_balance"], reverse=True
+            list(tmp["nodes"].values()),
+            key=lambda d: d["current_net_balance"],
+            reverse=True,
         )
         tpl = _reduce_possible_combinations(
             balances=[b["current_net_balance"] for b in balances]
@@ -259,7 +257,9 @@ def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
         # TRY the other way around
         if tpl is None:
             balances = sorted(
-                balances, key=lambda d: d["current_net_balance"], reverse=False
+                list(tmp["nodes"].values()),
+                key=lambda d: d["current_net_balance"],
+                reverse=False,
             )
             tpl = _reduce_possible_combinations(
                 balances=[b["current_net_balance"] for b in balances], reverse=False
@@ -270,7 +270,7 @@ def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
     # ############################
     # TODO: Weitermachen mit largest matching.
 
-    tmp["nodes"] = balances
+    # tmp["nodes"] = balances
     tmp["edges"] += new_transactions
 
     return pair_largest_difference_first(tmp)
@@ -283,6 +283,43 @@ def simplify_transactions(graph: Graph) -> Graph:
     tmp = copy.deepcopy(graph)
 
     return tmp
+
+
+"""
+class Node(TypedDict):
+    id: int
+    name: str
+    initial_net_balance: int
+    current_net_balance: int
+
+
+class Edge(TypedDict):
+    origin: Node
+    destination: Node
+    weight: int
+
+
+class Graph(TypedDict):
+    name: str
+    nodes: List[Node]
+    edges: List[Edge]
+"""
+
+# TODO: IVO
+# def df_to_graph(df: pd.DataFrame) -> Graph:
+#     nodes: Dict[str, Node] = []
+#     edges: List[Edge] = []
+
+#     # Im Nachhinein wäre es sooooooooo viel cleverer gewesen alle Nodes als Dict aufzubauen, aber
+#     # Jetzt hab ich dazu keinen Bock mehr :(
+
+#     node_names = pd.unique(df[["Giver", "Receiver"]].values.ravel("K"))
+
+#     for i, n in enumerate(node_names):
+#         nodes[n] = {"name": n, "initial_net_balance": 0, "current_net_balance": 0}
+
+#     for index, row in df.iterrows():
+#         print(row["c1"], row["c2"])
 
 
 def print_graph(graph: Graph) -> None:
