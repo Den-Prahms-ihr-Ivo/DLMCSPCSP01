@@ -112,11 +112,11 @@ class TestGraphUtils:
             "MATCH - REVERSE Counter Example Opposite #2",
         ],
     )
-    def test_pair_matching_differences_first(
+    def test_pair_matching_differences_first_LEFT(
         self, graph, expected, is_expected_to_fail
     ):
         # The function expects a graph that has already been reduced
-        tmp = graph_utils.pair_matching_differences_first(
+        tmp = graph_utils.pair_matching_differences_first_LEFT(
             graph_utils.reduce_net_balance(graph)
         )
 
@@ -140,3 +140,24 @@ class TestGraphUtils:
 
         if not is_expected_to_fail:
             assert found_edges == len(tmp["edges"])
+
+    @pytest.mark.parametrize(
+        ("target", "arr", "expected"),
+        [
+            (9, [4, 4, 5, 9, 10], [0, 2]),
+            (7, [1, 3, 5], []),
+            (9, [], []),
+            (10, [10], [0]),
+            (10, [1, 2, 3, 4], [0, 1, 2, 3]),
+        ],
+    )
+    def test_find_subset_indices(self, arr, target, expected):
+        result = graph_utils._find_subset_indices(arr=arr, target=target)
+
+        assert len(expected) == len(result)
+
+        for i, e in enumerate(expected):
+            assert e == result[i]
+
+
+# TODO: Find exact matches first as a boolean flag.

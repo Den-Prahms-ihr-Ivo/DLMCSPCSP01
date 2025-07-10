@@ -95,7 +95,7 @@ EXPECTED_EDGES: Dict[str, List[Edge]] = {
         {"origin": D, "destination": B, "weight": 6},
     ],
     "counter_example_longest": [
-        {"origin": B, "destination": A, "weight": 8},
+        {"origin": B, "destination": E, "weight": 8},
         {"origin": A, "destination": C, "weight": 3},
         {"origin": A, "destination": D, "weight": 6},
     ],

@@ -1,6 +1,7 @@
 import copy
+import operator
 
-from typing import Dict, TypedDict, Optional, List
+from typing import Dict, TypedDict, Optional, List, Tuple
 
 
 class Node(TypedDict):
@@ -49,6 +50,8 @@ def reduce_net_balance(graph: Graph) -> Graph:
 
     # TODO: assertion, dass alles aufgeht
 
+    tmp["edges"] = []
+
     return tmp
 
 
@@ -61,7 +64,7 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
 
     # Largest balance is now at position [0] and the lowest at [-1]
     balances: List[Node] = sorted(
-        tmp["nodes"], key=lambda d: d["initial_net_balance"], reverse=True
+        tmp["nodes"], key=lambda d: d["current_net_balance"], reverse=True
     )
 
     new_transactions: List[Edge] = []
@@ -132,18 +135,80 @@ def pair_largest_difference_first(graph: Graph) -> Graph:
                 tmp["nodes"], key=lambda d: d["current_net_balance"], reverse=True
             )
 
-    tmp["edges"] = new_transactions
+    tmp["edges"] += new_transactions
 
     return tmp
 
 
-def pair_matching_differences_first(graph: Graph) -> Graph:
+def _find_subset_indices(arr, target):
     """
-    First sorts all balances then matches differences.
+    Recursive Search if a target number can be expressed as the sum of a subset of an array
+    """
+
+    # Depth First Search
+    def dfs(i, remaining):
+        if remaining == 0:
+            return []
+
+        if i >= len(arr) or remaining < 0:
+            return None
+
+        # Include arr[i]
+        with_curr = dfs(
+            i + 1, remaining - abs(arr[i])
+        )  # Absolute, for this specific case.
+        if with_curr is not None:
+            result = [i] + with_curr
+            return result
+
+        # Exclude arr[i]
+        without_curr = dfs(i + 1, remaining)
+        return without_curr
+
+    tmp = dfs(0, abs(target))
+    return tmp if tmp else []
+
+
+def _reduce_possible_combinations(
+    balances, reverse=True
+) -> Optional[Tuple[int, List[int]]]:
+    """
+    It is assumed, that the balance list is already sorted from high to low.
+    i.e. 9,8,2,-4,-5,10
+
+    Returns ( index of number that has a subset)
+    None if not possible
+    """
+    # Find possible commbinations to settle debts more efficiently
+    comp = operator.lt if reverse else operator.gt
+
+    splitting_index = next((i for i, b in enumerate(balances) if comp(b, 0)), None)
+
+    if not splitting_index:
+        return None
+
+    right_balances = balances[splitting_index:]
+
+    # Now we try to find a way to express a balance on the left as a sum of balances on the right (i.r)
+    for l, left in enumerate(balances[:splitting_index]):
+        subset = _find_subset_indices(arr=right_balances, target=left)
+        if len(subset) > 0:
+            return (l, [s + splitting_index for s in subset])
+
+    return None
+
+
+def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
+    """
+    Takes a list of balances and tries to find number that add up to 0
     Returns a copy with all transactions minimized starting with the best matching differnces
+    If none are Found, None is returned.
+
+    Matching from the left
     """
     tmp = copy.deepcopy(graph)
 
+    # First sorts all balances then matches differences.
     # Largest balance is now at position [0] and the lowest at [-1]
     balances: List[Node] = sorted(
         tmp["nodes"], key=lambda d: d["initial_net_balance"], reverse=True
@@ -151,13 +216,64 @@ def pair_matching_differences_first(graph: Graph) -> Graph:
 
     new_transactions: List[Edge] = []
 
+    tpl = _reduce_possible_combinations(
+        balances=[b["initial_net_balance"] for b in balances]
+    )
+
+    while tpl:
+        idx, combinations = tpl
+        A = balances[idx]
+
+        # update Edges
+        for c in combinations:
+            if balances[c]["current_net_balance"] < 0:
+                new_transactions.append(
+                    {
+                        "origin": A,
+                        "destination": balances[c],
+                        "weight": abs(balances[c]["current_net_balance"]),
+                    }
+                )
+            else:
+                new_transactions.append(
+                    {
+                        "destination": A,
+                        "origin": balances[c],
+                        "weight": abs(balances[c]["current_net_balance"]),
+                    }
+                )
+
+            # update balances
+            balances[idx]["current_net_balance"] = abs(
+                balances[idx]["current_net_balance"]
+            ) - abs(balances[c]["current_net_balance"])
+            balances[c]["current_net_balance"] = 0
+
+        balances = sorted(
+            balances, key=lambda d: d["current_net_balance"], reverse=True
+        )
+        tpl = _reduce_possible_combinations(
+            balances=[b["current_net_balance"] for b in balances]
+        )
+
+        # TRY the other way around
+        if tpl is None:
+            balances = sorted(
+                balances, key=lambda d: d["current_net_balance"], reverse=False
+            )
+            tpl = _reduce_possible_combinations(
+                balances=[b["current_net_balance"] for b in balances], reverse=False
+            )
+
     # ############################
     # TODO: IMPLEMENT
     # ############################
+    # TODO: Weitermachen mit largest matching.
 
-    tmp["edges"] = new_transactions
+    tmp["nodes"] = balances
+    tmp["edges"] += new_transactions
 
-    return tmp
+    return pair_largest_difference_first(tmp)
 
 
 def simplify_transactions(graph: Graph) -> Graph:
@@ -172,5 +288,13 @@ def simplify_transactions(graph: Graph) -> Graph:
 def print_graph(graph: Graph) -> None:
     for edge in graph["edges"]:
         print(
-            f"{edge['origin']['name']} : {edge['weight']} ==> {edge['destination']['name']}"
+            f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']} "
+        )
+
+
+def compare_graphs(graph: Graph, edges: List[Edge]) -> None:
+    print("AAAAA")
+    for i, edge in enumerate(graph["edges"]):
+        print(
+            f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']} \t |  {edges[i]['origin']['name']} ==> {edges[i]['destination']['name']} : {edges[i]['weight']}"
         )
