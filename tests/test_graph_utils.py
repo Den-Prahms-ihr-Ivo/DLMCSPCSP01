@@ -40,12 +40,18 @@ class TestGraphUtils:
                 EXPECTED_EDGES["counter_example_opposite"],
                 True,
             ),
+            (
+                TEST_GRAPHS["counter_example_opposite_reverse"],
+                EXPECTED_EDGES["counter_example_opposite_reverse"],
+                True,
+            ),
         ],
         ids=[
             "LARGEST - balances equal to 0",
             "LARGEST - simple 4->3",
             "LARGEST - Counter Example",
             "LARGEST - Counter Example Opposite #2",
+            "LARGEST - REVERSE Counter Example Opposite #2",
         ],
     )
     def test_pair_largest_difference_first(self, graph, expected, is_expected_to_fail):
@@ -92,12 +98,18 @@ class TestGraphUtils:
                 EXPECTED_EDGES["counter_example_opposite"],
                 False,
             ),
+            (
+                TEST_GRAPHS["counter_example_opposite_reverse"],
+                EXPECTED_EDGES["counter_example_opposite_reverse"],
+                False,
+            ),
         ],
         ids=[
             "MATCH - balances equal to 0",
             "MATCH - simple 4->3",
             "MATCH - Counter Example",
             "MATCH - Counter Example Opposite #2",
+            "MATCH - REVERSE Counter Example Opposite #2",
         ],
     )
     def test_pair_matching_differences_first(
