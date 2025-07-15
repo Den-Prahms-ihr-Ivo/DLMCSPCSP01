@@ -467,11 +467,6 @@ def process_CSV(path_to_csv: str) -> Optional[Graph]:
     graph = df_to_graph(df, name=path_to_csv)
     graph = reduce_net_balance(graph)
 
-    for n in graph["nodes"].values():
-        print(f"{n['name']} == {n['initial_net_balance']}")
-
-    print("----------")
-
     matching_algorithms: List[Callable[[Graph], Graph]] = [
         pair_largest_difference_first,
         lambda g: pair_matching_differences_first(g, False),
@@ -494,5 +489,5 @@ def process_CSV(path_to_csv: str) -> Optional[Graph]:
     if not current_best_graph:
         return None
 
-    # TODO: muss noch durch 100 geteilt werden.
+    # TODO: muss noch durch 100 geteilt werden?!
     return current_best_graph
