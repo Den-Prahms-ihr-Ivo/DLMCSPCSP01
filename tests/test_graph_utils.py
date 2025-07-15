@@ -270,3 +270,21 @@ class TestGraphUtils:
                 assert False
 
         assert found_edges == len(tmp["edges"])
+
+    @pytest.mark.parametrize(
+        ("graph", "is_expected_to_fail"),
+        [
+            (None, True),
+            (TEST_GRAPHS["0_sum"], False),
+        ],
+        ids=[
+            "TEST CASE 1",
+            "TEST CASE 2",
+        ],
+    )
+    def test_assertions(self, graph, is_expected_to_fail):
+        if is_expected_to_fail:
+            with pytest.raises(Exception):
+                graph_utils._assert_graph_correctness(graph)
+        else:
+            assert True

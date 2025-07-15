@@ -360,15 +360,6 @@ def pair_closest_differences_first(graph: Graph) -> Graph:
     return tmp
 
 
-def simplify_transactions(graph: Graph) -> Graph:
-    """
-    Expects a graph with simplified expenses and returns a copy of the initial graph
-    """
-    tmp = copy.deepcopy(graph)
-
-    return tmp
-
-
 def df_to_graph(df: pd.DataFrame, name="Nina") -> Graph:
     nodes: Dict[str, Node] = {}
     edges: List[Edge] = []
