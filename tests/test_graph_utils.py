@@ -118,11 +118,79 @@ class TestGraphUtils:
             "MATCH - Problematic Matching",
         ],
     )
-    def test_pair_matching_differences_first_LEFT(
+    def test_pair_matching_differences_first(
         self, graph, expected, is_expected_to_fail
     ):
         # The function expects a graph that has already been reduced
-        tmp = graph_utils.pair_matching_differences_first_LEFT(
+        tmp = graph_utils.pair_matching_differences_first(
+            graph_utils.reduce_net_balance(graph)
+        )
+
+        found_edges = 0
+        for expected_e in expected:
+            edge = next(
+                (
+                    e
+                    for e in tmp["edges"]
+                    if e["origin"]["name"] == expected_e["origin"]["name"]
+                    and e["destination"]["name"] == expected_e["destination"]["name"]
+                ),
+                None,
+            )
+            if edge:
+                if not is_expected_to_fail:
+                    assert edge["weight"] == expected_e["weight"]
+                found_edges += 1
+            else:
+                assert is_expected_to_fail
+
+        if not is_expected_to_fail:
+            assert found_edges == len(tmp["edges"])
+
+    @pytest.mark.parametrize(
+        ("graph", "expected", "is_expected_to_fail"),
+        [
+            (TEST_GRAPHS["0_sum"], EXPECTED_EDGES["0_sum"], False),
+            (TEST_GRAPHS["4_trans_to_3"], EXPECTED_EDGES["4_trans_to_3"], False),
+            (
+                TEST_GRAPHS["counter_example_longest"],
+                EXPECTED_EDGES["counter_example_longest"],
+                True,
+            ),
+            (
+                TEST_GRAPHS["counter_example_opposite"],
+                EXPECTED_EDGES["counter_example_opposite"],
+                True,
+            ),
+            (
+                TEST_GRAPHS["counter_example_opposite_reverse"],
+                EXPECTED_EDGES["counter_example_opposite_reverse"],
+                True,
+            ),
+            (
+                TEST_GRAPHS["problematic_matching"],
+                EXPECTED_EDGES["problematic_matching"],
+                True,
+            ),
+            (
+                TEST_GRAPHS["closest_matching"],
+                EXPECTED_EDGES["closest_matching"],
+                False,
+            ),
+        ],
+        ids=[
+            "CLOSEST - balances equal to 0",
+            "CLOSEST - simple 4->3",
+            "CLOSEST - Counter Example",
+            "CLOSEST - Counter Example Opposite #2",
+            "CLOSEST - REVERSE Counter Example Opposite #2",
+            "CLOSEST - Problematic Matching",
+            "CLOSEST - Closest Matching",
+        ],
+    )
+    def test_pair_closest_differences_first(self, graph, expected, is_expected_to_fail):
+        # The function expects a graph that has already been reduced
+        tmp = graph_utils.pair_closest_differences_first(
             graph_utils.reduce_net_balance(graph)
         )
 

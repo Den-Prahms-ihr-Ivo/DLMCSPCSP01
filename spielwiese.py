@@ -1,20 +1,17 @@
 import pandas as pd
 
 from src import graph_utils
-from tests.data import TEST_GRAPHS, EXPECTED_EDGES
+from tests.data import TEST_GRAPHS, EXPECTED_EDGES, EXPECTED_CSV_EDGES
 
 
 if __name__ == "__main__":
-    graph = TEST_GRAPHS["has_no_cycle"]
+    # graph = TEST_GRAPHS["counter_example_longest"]
+    edges = EXPECTED_CSV_EDGES["Test_Case_1"]
 
-    print(graph)
+    graph = graph_utils.process_CSV("./data/Test_Case_1.csv")
+    if graph:
+        graph_utils.print_graph(graph)
 
-    money_given = sum(
-        [e["weight"] for e in graph["edges"] if e["destination"]["name"] == "C"]
-    )
-    print(money_given)
-
-    tmp = graph_utils.reduce_net_balance(graph)
-    # print([t[""] for t in tmp["nodes"]])
-    for i, node in enumerate(list(tmp["nodes"].values())):
-        print(node["initial_net_balance"])
+    print("\n----------\n")
+    for e in edges:
+        graph_utils.print_edge(e)

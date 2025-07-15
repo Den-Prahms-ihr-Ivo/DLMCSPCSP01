@@ -1,8 +1,9 @@
 import copy
 import operator
 import pandas as pd
+from math import inf as INFINITY
 
-from typing import Dict, TypedDict, Optional, List, Tuple
+from typing import Dict, TypedDict, Optional, List, Tuple, Callable
 
 
 class Node(TypedDict):
@@ -48,8 +49,6 @@ def reduce_net_balance(graph: Graph) -> Graph:
 
         node["initial_net_balance"] = net_balance
         node["current_net_balance"] = net_balance
-
-    # TODO: assertion, dass alles aufgeht
 
     tmp["edges"] = []
 
@@ -193,7 +192,7 @@ def _reduce_possible_combinations(
     return None
 
 
-def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
+def pair_matching_differences_first(graph: Graph, use_closest_matching=False) -> Graph:
     """
     Takes a list of balances and tries to find number that add up to 0
     Returns a copy with all transactions minimized starting with the best matching differnces
@@ -266,15 +265,99 @@ def pair_matching_differences_first_LEFT(graph: Graph) -> Graph:
                 balances=[b["current_net_balance"] for b in balances], reverse=False
             )
 
-    # ############################
-    # TODO: IMPLEMENT
-    # ############################
-    # TODO: Weitermachen mit largest matching.
-
-    # tmp["nodes"] = balances
     tmp["edges"] += new_transactions
 
-    return pair_largest_difference_first(tmp)
+    if use_closest_matching:
+        return pair_closest_differences_first(tmp)
+    else:
+        return pair_largest_difference_first(tmp)
+
+
+def pair_closest_differences_first(graph: Graph) -> Graph:
+    """
+    Takes a list of balances and tries to find number that add up to 0
+    Returns a copy with all transactions minimized starting with the best matching differnces
+    If none are Found, None is returned.
+
+    Matching from the left
+    """
+    tmp = copy.deepcopy(graph)
+
+    new_transactions: List[Edge] = []
+
+    balances: List[Node] = sorted(
+        list(tmp["nodes"].values()),
+        key=lambda d: d["initial_net_balance"],
+        reverse=True,
+    )
+
+    balances = [b for b in balances if b["current_net_balance"] != 0]
+
+    while len(balances) > 0:
+        splitting_index = next(
+            (i for i, b in enumerate(balances) if b["current_net_balance"] < 0), None
+        )
+        if not splitting_index:
+            break
+
+        positive_balances = balances[:splitting_index]
+        negative_balances = balances[splitting_index:]
+
+        # Find the closest match
+        difference = INFINITY
+        current_best_match = -1
+        for i in range(splitting_index, len(balances)):
+            d = abs(
+                positive_balances[0]["current_net_balance"]
+                + balances[i]["current_net_balance"]
+            )
+            if d < difference:
+                current_best_match = i
+                difference = d
+
+        A = balances[0]
+        B = balances[current_best_match]
+        a = balances[0]["current_net_balance"]
+        b = balances[current_best_match]["current_net_balance"]
+
+        # Now match first and last entry
+        if a == abs(b):
+            # A and B are a perfect match and cancel each other out.
+            # Since A > B due to sorting, A hast to pay the amount to B to settle the debt.
+            new_transactions.append({"origin": A, "destination": B, "weight": a})
+
+            # ...  and their corresponding net_balance are updated
+            tmp["nodes"][A["name"]]["current_net_balance"] = 0
+            tmp["nodes"][B["name"]]["current_net_balance"] = 0
+
+        elif a < abs(b):
+            # Since |a| < |b|, A can not repay for all the money B has lent.
+            new_transactions.append({"origin": A, "destination": B, "weight": a})
+
+            # ...  and their corresponding net_balance are updated
+            tmp["nodes"][A["name"]]["current_net_balance"] = 0
+            tmp["nodes"][B["name"]]["current_net_balance"] = b + a
+
+        else:  # a > abs(b)
+            # Since |a| > |b|, A has to pay back more than B has lent.
+            new_transactions.append({"origin": A, "destination": B, "weight": abs(b)})
+
+            # ...  and their corresponding net_balance are updated
+            tmp["nodes"][A["name"]]["current_net_balance"] = b + a
+            tmp["nodes"][B["name"]]["current_net_balance"] = 0
+
+        # afterwards these nodes are removed from the list ...
+        balances = [b for b in balances if b["current_net_balance"] != 0]
+        # resort
+        balances = sorted(
+            list(tmp["nodes"].values()),
+            key=lambda d: d["current_net_balance"],
+            reverse=True,
+        )
+
+    tmp["edges"] += new_transactions
+
+    return tmp
 
 
 def simplify_transactions(graph: Graph) -> Graph:
@@ -329,10 +412,70 @@ def compare_graphs(graph: Graph, edges: List[Edge]) -> None:
         )
 
 
-def process_CSV(path_to_csv: str) -> Graph:
+def _assert_graph_correctness(graph: Optional[Graph]) -> None:
+    """
+    - Asserts that all initial balances equal the new balances
+    - Asserts that the overall sum is 0
+    - Asserts that everybody pays only the amount they owe.
+    """
+    if not graph:
+        assert False
+
+    initial_negative_balances = 0
+    initial_positive_balances = 0
+    edge_sum = sum([w["weight"] for w in graph["edges"]])
+
+    for n in graph["nodes"].values():
+        if n["initial_net_balance"] > 0:
+            initial_positive_balances += n["initial_net_balance"]
+        else:
+            initial_negative_balances += abs(n["initial_net_balance"])
+
+    assert initial_positive_balances == initial_negative_balances == edge_sum
+
+    oweing_nodes: Dict[str, int] = {}
+    lending_nodes: Dict[str, int] = {}
+
+    for n in graph["nodes"].values():
+        if n["initial_net_balance"] > 0:
+            oweing_nodes[n["name"]] = n["initial_net_balance"]
+        else:
+            lending_nodes[n["name"]] = n["initial_net_balance"]
+
+    for e in graph["edges"]:
+        lending_nodes[e["destination"]["name"]] += e["weight"]
+        oweing_nodes[e["origin"]["name"]] -= e["weight"]
+
+    for x in oweing_nodes.values():
+        assert x == 0
+
+    for x in lending_nodes.values():
+        assert x == 0
+
+
+def process_CSV(path_to_csv: str) -> Optional[Graph]:
     df = pd.read_csv("./data/Test_Case_1.csv")
 
     graph = df_to_graph(df, name=path_to_csv)
     graph = reduce_net_balance(graph)
 
-    return pair_matching_differences_first_LEFT(graph)
+    matching_algorithms: List[Callable[[Graph], Graph]] = [
+        pair_largest_difference_first,
+        lambda g: pair_matching_differences_first(g, False),
+        lambda g: pair_matching_differences_first(g, True),
+        pair_closest_differences_first,
+    ]
+
+    current_best_graph: Optional[Graph] = None
+    current_best_score = INFINITY
+
+    for a in matching_algorithms:
+        tmp = a(graph)
+
+        if len(tmp["edges"]) < current_best_score:
+            current_best_score = len(tmp["edges"])
+            current_best_graph = tmp
+
+    _assert_graph_correctness(current_best_graph)
+
+    return current_best_graph

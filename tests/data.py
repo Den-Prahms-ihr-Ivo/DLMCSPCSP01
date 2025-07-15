@@ -99,6 +99,15 @@ TEST_GRAPHS: Dict[str, Graph] = {
             {"origin": F, "destination": B, "weight": 4},
         ],
     },
+    "closest_matching": {
+        "name": "Counterexample for Subset Sum Problem",
+        "nodes": {"A": A, "B": B, "C": C, "D": D, "E": E, "F": F, "G": G, "H": H},
+        "edges": [
+            {"origin": C, "destination": A, "weight": 3},
+            {"origin": D, "destination": A, "weight": 2},
+            {"origin": E, "destination": B, "weight": 4},
+        ],
+    },  #
 }
 
 EXPECTED_EDGES: Dict[str, List[Edge]] = {
@@ -134,6 +143,12 @@ EXPECTED_EDGES: Dict[str, List[Edge]] = {
         #
         {"origin": B, "destination": E, "weight": 4},
         {"origin": B, "destination": F, "weight": 4},
+    ],
+    "closest_matching": [
+        {"origin": A, "destination": E, "weight": 4},
+        {"origin": A, "destination": D, "weight": 1},
+        {"origin": B, "destination": C, "weight": 3},
+        {"origin": B, "destination": D, "weight": 1},
     ],
 }
 
