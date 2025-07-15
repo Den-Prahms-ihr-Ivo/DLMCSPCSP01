@@ -154,10 +154,19 @@ EXPECTED_EDGES: Dict[str, List[Edge]] = {
 
 EXPECTED_CSV_EDGES: Dict[str, List[Edge]] = {
     "Test_Case_1": [
-        {"origin": A, "destination": G, "weight": 9},
-        {"origin": D, "destination": H, "weight": 2},
-        {"origin": B, "destination": H, "weight": 8},
-        {"origin": C, "destination": E, "weight": 4},
-        {"origin": C, "destination": F, "weight": 4},
+        {"origin": A, "destination": G, "weight": 900},  # IN EUROCENT
+        {"origin": D, "destination": H, "weight": 200},
+        {"origin": B, "destination": H, "weight": 800},
+        {"origin": C, "destination": E, "weight": 400},
+        {"origin": C, "destination": F, "weight": 400},
+    ],
+    "Test_Case_2": [
+        {"origin": D, "destination": H, "weight": 20581},
+        {"origin": E, "destination": C, "weight": 13207},
+        {"origin": E, "destination": B, "weight": 2343},
+        {"origin": E, "destination": H, "weight": 1631},
+        {"origin": F, "destination": H, "weight": 390},
+        {"origin": F, "destination": A, "weight": 4231},
+        {"origin": G, "destination": H, "weight": 8421},
     ],
 }

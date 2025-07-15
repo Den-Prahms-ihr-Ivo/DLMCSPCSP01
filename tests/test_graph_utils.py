@@ -236,10 +236,12 @@ class TestGraphUtils:
     @pytest.mark.parametrize(
         ("path_to_csv", "expected"),
         [
-            ("./data/Test_Case_1", EXPECTED_CSV_EDGES["Test_Case_1"]),
+            ("./data/Test_Case_1.csv", EXPECTED_CSV_EDGES["Test_Case_1"]),
+            ("./data/Test_Case_2.csv", EXPECTED_CSV_EDGES["Test_Case_2"]),
         ],
         ids=[
             "TEST CASE 1",
+            "TEST CASE 2",
         ],
     )
     def test_integration(self, path_to_csv, expected):

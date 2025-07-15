@@ -395,7 +395,7 @@ def df_to_graph(df: pd.DataFrame, name="Nina") -> Graph:
 
 def print_edge(edge: Edge) -> None:
     print(
-        f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']} "
+        f"{edge['origin']['name']} ==> {edge['destination']['name']} : {edge['weight']/100} "
     )
 
 
@@ -454,10 +454,23 @@ def _assert_graph_correctness(graph: Optional[Graph]) -> None:
 
 
 def process_CSV(path_to_csv: str) -> Optional[Graph]:
-    df = pd.read_csv("./data/Test_Case_1.csv")
+    try:
+        df = pd.read_csv(path_to_csv)
+        df["Amount"] = df["Amount"].astype(float).fillna(0) * 100
+    except ValueError:  # Sometimes Excel uses the german decimal seperator ...
+        df = pd.read_csv(path_to_csv, decimal=",")
+        df["Amount"] = df["Amount"].astype(float).fillna(0) * 100
+
+    # It is easier to do calculations using integer values to avoid rounding erros and move the decimal place afterwards.
+    df["Amount"] = df["Amount"].astype(int)
 
     graph = df_to_graph(df, name=path_to_csv)
     graph = reduce_net_balance(graph)
+
+    for n in graph["nodes"].values():
+        print(f"{n['name']} == {n['initial_net_balance']}")
+
+    print("----------")
 
     matching_algorithms: List[Callable[[Graph], Graph]] = [
         pair_largest_difference_first,
@@ -478,4 +491,8 @@ def process_CSV(path_to_csv: str) -> Optional[Graph]:
 
     _assert_graph_correctness(current_best_graph)
 
+    if not current_best_graph:
+        return None
+
+    # TODO: muss noch durch 100 geteilt werden.
     return current_best_graph
