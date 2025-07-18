@@ -444,7 +444,26 @@ def _assert_graph_correctness(graph: Optional[Graph]) -> None:
         assert x == 0
 
 
-def process_CSV(path_to_csv: str) -> Optional[Graph]:
+def _save_graph(save_csv_path: str, graph: Optional[Graph]) -> None:
+    if not graph:
+        return
+
+    df = pd.DataFrame(columns=["Giver", "Receiver", "Amount"])
+
+    df = pd.DataFrame(
+        [
+            (e["origin"]["name"], e["destination"]["name"], e["weight"] / 100)
+            for e in graph["edges"]
+        ],
+        columns=["Giver", "Receiver", "Amount"],
+    )
+
+    df.to_csv(save_csv_path, index=False)
+
+
+def process_CSV(
+    path_to_csv: str, save_csv_path: Optional[str] = None
+) -> Optional[Graph]:
     try:
         df = pd.read_csv(path_to_csv)
         df["Amount"] = df["Amount"].astype(float).fillna(0) * 100
@@ -480,5 +499,7 @@ def process_CSV(path_to_csv: str) -> Optional[Graph]:
     if not current_best_graph:
         return None
 
-    # TODO: muss noch durch 100 geteilt werden?!
+    if save_csv_path:
+        _save_graph(save_csv_path, graph=current_best_graph)
+
     return current_best_graph
